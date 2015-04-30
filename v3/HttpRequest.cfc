@@ -9,6 +9,13 @@ component displayname="HttpRequest" accessors="true" output="false" {
     property name="formFields" type="struct";
     property name="queryParams" type="array";
 
+
+    /**
+     * returns an instance of HttpRequest
+     * 
+     * @requestUrl.hint The HttpRequest endpoint
+     * @method.hint The request method (GET|POST|PUT|DELETE) default is GET.
+     **/    
     public HttpRequest function init(
         required string requestUrl,
         string method="GET"
@@ -21,6 +28,12 @@ component displayname="HttpRequest" accessors="true" output="false" {
         return this;
     }
 
+    /**
+     * adds a header name/value pair
+     * 
+     * @name.hint The header name
+     * @value.hint The header value
+     **/ 
     public void function addHeader(
         required string name,
         required string value
@@ -28,6 +41,12 @@ component displayname="HttpRequest" accessors="true" output="false" {
         variables.headers[arguments.name] = arguments.value;
     }
 
+    /**
+     * adds a formField (for requests with method=POST) name/value pair
+     * 
+     * @name.hint The formField name
+     * @value.hint The formField value
+     **/
     public void function addFormField(
         required string name,
         required string value
@@ -35,6 +54,17 @@ component displayname="HttpRequest" accessors="true" output="false" {
         variables.formFields[arguments.name] = arguments.value;
     }
 
+    /**
+     * adds a query param name/value pair which are composed into the api endpoint
+     * when the value is an empty sting the name is appended without a value
+     * 
+     * calling addQueryParam('athlete','')
+     * followed by addQueryParam('activities','1234567')
+     * results in  /athlete/activities/1234567
+     * 
+     * @name.hint The query param name
+     * @value.hint The query param value
+     **/
     public void function addQueryParam(
         required string name,
         required string value
@@ -42,6 +72,10 @@ component displayname="HttpRequest" accessors="true" output="false" {
         ArrayAppend(variables.queryParams,arguments);
     }
 
+    /**
+     * returns the completely rendered request url
+     * 
+     **/
     public string function getRequestUrl() {
         var requestUrl = getUrl();
         var param = {};
@@ -54,13 +88,16 @@ component displayname="HttpRequest" accessors="true" output="false" {
         return requestUrl;
     }
 
+    /**
+     * returns the http request result struct
+     * 
+     **/
     public struct function execute() {
         var header = {};
         var field = {};
         var body = getBody();
         var httpResult = {};
         var requestLog = "REQUESTURL: " & getRequestUrl() & " METHOD: " & getMethod() & " HEADERS: " & SerializeJSON(getHeaders()) & " FORMFIELDS: " & SerializeJSON(getFormFields());
-        //log file="http" text=requestLog  type="information";
         http url="#getRequestUrl()#" method="#getMethod()#" result="httpResult" throwonerror="no" {
             for (header in getHeaders()) {
                     httpparam name="#header#" type="HEADER" value="#variables.headers[header]#";
@@ -71,7 +108,6 @@ component displayname="HttpRequest" accessors="true" output="false" {
                 }
             }
         }
-        //log file="http" text="RESULT: " & httpResult.fileContent type="trace";
         return httpResult;
     }
 

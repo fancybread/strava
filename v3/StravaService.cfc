@@ -4,17 +4,17 @@ component displayname="StravaService" accessors="true" output="false" {
 
     property name="endpoint" default="https://www.strava.com/api/v3";
 
-    /*
-     * returns an instance of StravaService
+    /**
+	 * returns an instance of StravaService
      **/
     public StravaService function init() {
        return this;
     }
 
-    /*
+    /**
      * returns the current authenticated athlete
      * 
-     * @param token the OAuth token for athlete
+     * @token.hint  the OAuth token for athlete
      **/
     public Athlete function currentAthlete(
         required string token
@@ -26,11 +26,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return new Athlete(argumentCollection=DeserializeJson(response.fileContent));
     }
 
-    /*
-     * returns array of activities for the current athlete
+    /**
+     * returns an array of activities for the current athlete
      * 
-     * @param token the OAuth token for athlete
-     * @param startDate the date to retrieve activities since
+     * @token.hint the OAuth token for athlete
+     * @startDate.hint the start date to retrieve activities from
+     * @activities.hint an array of activiites if method is invoked recursively
      **/
     public any function athleteActivities(
         required string token,
@@ -51,15 +52,18 @@ component displayname="StravaService" accessors="true" output="false" {
             }
             // make a recursive call if we get a return of the maximum 30 activities
 	        if (ArrayLen(payload) eq 30) {
-	            var nextStart = activities[ArrayLen(activities)].getStartDate();
+	            var nextStart = DateAdd('s',1,activities[ArrayLen(activities)].getStartDate());
 	            local.activities = athleteActivities(token=arguments.token,startDate=nextStart,activities=local.activities);
 	        }
         }
         return local.activities;
     }
 
-    /*
-     * @hint returns an athlete by id
+    /**
+     * returns an athlete by id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the Athlete id
      **/
     public Athlete function findAthlete(
         required string token,
@@ -72,8 +76,11 @@ component displayname="StravaService" accessors="true" output="false" {
         return new Athlete(argumentCollection=DeserializeJson(response.fileContent));
     }
 
-    /*
-     * @hint returns an array of kom SegmentEfort by athlete id
+    /**
+     * returns an array of kom SegmentEfort by athlete id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the Athlete id
      **/
     public array function findAthleteKOMs(
         required string token,
@@ -91,8 +98,11 @@ component displayname="StravaService" accessors="true" output="false" {
         return koms;
     }
 
-    /*
-     * @hint returns athlete Totals instance by athlete id
+    /**
+     * returns athlete Totals instance by athlete id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the Athlete id
      **/
     public Totals function findAthleteTotals(
         required string token,
@@ -106,8 +116,11 @@ component displayname="StravaService" accessors="true" output="false" {
         return new Totals(argumentCollection=DeserializeJson(response.fileContent));
     }
 
-     /*
+     /**
      * returns an Activity by id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the Activity id
      **/
     public Activity function findActivity(
         required string token,
@@ -121,6 +134,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return new Activity(argumentCollection=DeserializeJson(response.fileContent));
     }
 
+    /**
+     * returns an array of activities for athletes that the authenticated athlete follows
+     * 
+     * @token.hint the OAuth token for athlete
+     * @startDate.hint the start date to retrieve activities from
+     **/
     public array function listActivitiesFollowing(
         required string token,
         required date startDate
@@ -138,30 +157,58 @@ component displayname="StravaService" accessors="true" output="false" {
         return activities;
     }
 
-    public any function findActivityLaps(
+    /**
+     * returns an array of lap efforts for activity
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the activity id
+     **/
+    public array function findActivityLaps(
         required string token,
         required numeric id
     ) {
+        var activityLaps = [];
         var req = newRequest(method='GET');
         req.addQueryParam('activities',arguments.id);
         req.addQueryParam('laps','');
         req.addHeader('Authorization','Bearer ' & arguments.token);
         var response = req.execute();
-        return response.fileContent;
+        for (var lap in DeserializeJson(response.fileContent)) {
+            ArrayAppend(activityLaps, new LapEffort(argumentCollection=lap));
+        }
+        return activityLaps;
     }
 
-    public any function findActivityZones(
+    /**
+     * returns an array of activity zones (heartrate|power) by activity id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the activity id
+     **/
+    public array function findActivityZones(
         required string token,
         required numeric id
     ) {
+        var activityZones = [];
         var req = newRequest(method='GET');
         req.addQueryParam('activities',arguments.id);
         req.addQueryParam('zones','');
         req.addHeader('Authorization','Bearer ' & arguments.token);
         var response = req.execute();
-        return response.fileContent;
+        if (response.status_code == '200') {
+            for (var zone in DeserializeJson(response.fileContent)) {
+                ArrayAppend(activityZones, new ActivityZone(argumentCollection=zone));
+            }
+        }
+        return activityZones;
     }
 
+    /**
+     * returns an array of comments by activity id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the activity id
+     **/
     public array function listActivityComments(
         required string token,
         required numeric id
@@ -178,6 +225,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return comments;
     }
 
+    /**
+     * returns an array of athletes who have  by activity id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the activity id
+     **/
     public array function listActivityKudos(
         required string token,
         required numeric id
@@ -194,6 +247,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return kudoers;
     }
 
+    /**
+     * returns an array of Photos by activity id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the activity id
+     **/
    public array function listActivityPhotos(
         required string token,
         required numeric id
@@ -212,6 +271,13 @@ component displayname="StravaService" accessors="true" output="false" {
         return photos;
     }
 
+    /**
+     * returns an array of Activity Streams by activity id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the activity id
+     * @types.hint the Stream type
+     **/
     public array function listActivityStreams(
         required string token,
         required numeric id,
@@ -231,6 +297,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return streams;
     }
 
+    /**
+     * returns a Club instance by club id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the club id
+     **/
     public Club function findClub(
         required string token,
         required numeric id
@@ -242,6 +314,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return new Club(argumentCollection=DeserializeJSON(response.fileContent));
     }
 
+    /**
+     * returns a an array of Club instances for the authenticated athlete
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the club id
+     **/
     public array function listAthleteClubs(
         required string token
     ) {
@@ -259,6 +337,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return clubs;
     }
 
+    /**
+     * returns a an array of Athlete instances by club id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the club id
+     **/
     public array function listClubMembers(
         required string token,
         required numeric id
@@ -277,6 +361,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return members;
     }
 
+    /**
+     * returns a an array of Activity instances by club id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the club id
+     **/
     public array function listClubActivities(
         required string token,
         required numeric id
@@ -295,6 +385,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return activities;
     }
 
+    /**
+     * returns a Gear instances by id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the Gear id
+     **/
     public Gear function findGear(
         required string token,
         required string id
@@ -306,6 +402,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return new Gear(argumentCollection=DeserializeJSON(response.fileContent));
     }
 
+    /**
+     * returns a Segment instance by id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the Segemnt id
+     **/
     public Segment function findSegment(
         required string token,
         required numeric id
@@ -317,6 +419,13 @@ component displayname="StravaService" accessors="true" output="false" {
         return new Segment(argumentCollection=DeserializeJSON(response.fileContent));
     }
 
+    /**
+     * returns an array of SegmentEffort instances by Segment id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the Segemnt id
+     * @perPage.hint the number of instances to return
+     **/
     public array function listSegmentEfforts(
         required string token,
         required numeric id,
@@ -337,6 +446,14 @@ component displayname="StravaService" accessors="true" output="false" {
         return segmentEfforts;
     }
 
+    /**
+     * returns an array of SegmentEffort instances by Segment and Athlete ids
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the Segemnt id
+     * @athleteId.hint the Athlete id
+     * @perPage.hint the number of instances to return
+     **/
     public array function listSegmentEffortsForAthlete(
         required string token,
         required numeric id,
@@ -358,6 +475,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return segmentEfforts;
     }
 
+    /**
+     * returns a LeaderBoard instance by Segment id
+     * 
+     * @token.hint the OAuth token for athlete
+     * @id.hint the Segemnt id
+     **/
     public LeaderBoard function findSegmentLeaderboard(
         required string token,
         required numeric id
@@ -371,6 +494,13 @@ component displayname="StravaService" accessors="true" output="false" {
         return new LeaderBoard(argumentCollection=DeserializeJson(response.fileContent));
     }
 
+    /**
+     * returns an array of Streams by SegmentEffort id
+     * 
+     * @token.hint the OAuth token
+     * @id.hint the SegmentEffort id
+     * @types.hint the stream types
+     **/
     public array function listSegmentStreams(
         required string token,
         required numeric id,
@@ -390,6 +520,11 @@ component displayname="StravaService" accessors="true" output="false" {
         return streams;
     }
 
+    /**
+     * returns an array of Segments for the authentocated athlete
+     * 
+     * @token.hint the OAuth token
+     **/
     public array function listStarredSegments(
         required string token
     ) {
@@ -406,6 +541,12 @@ component displayname="StravaService" accessors="true" output="false" {
         return segments;
     }
 
+    /**
+     * returns a SegmentEffort by id
+     * 
+     * @token.hint the OAuth token
+     * @id.hint the SegmentEffort id
+     **/
     public SegmentEffort function findSegmentEffort(
         required string token,
         required numeric id
@@ -417,6 +558,13 @@ component displayname="StravaService" accessors="true" output="false" {
         return new SegmentEffort(argumentCollection=DeserializeJSON(response.fileContent));
     }
 
+    /**
+     * returns an array of Streams by SegmentEffort id
+     * 
+     * @token.hint the OAuth token
+     * @id.hint the SegmentEffort id
+     * @types.hint the stream types
+     **/
     public array function listSegmentEffortStreams(
         required string token,
         required numeric id,
@@ -436,8 +584,10 @@ component displayname="StravaService" accessors="true" output="false" {
         return streams;
     }
 
-    /*
-     * @hint returns the seconds from 1970-01-01 00:00:00 UTC to startDate (converted to UTC)
+    /**
+     * returns the seconds from 1970-01-01 00:00:00 UTC to startDate (converted to UTC)
+     * 
+     * @startDate.hint the start date
      **/
     private numeric function getUnixEpoch(
         required date startDate
@@ -445,8 +595,10 @@ component displayname="StravaService" accessors="true" output="false" {
     	return LSNumberFormat(DateDiff('s',DateConvert('local2utc','1970-01-01 00:00:00'),DateConvert('local2utc',arguments.startDate)),'_');
     }
 
-    /*
-     * @hint returns an HttpRequest instance
+    /**
+     * returns an HttpRequest instance
+     * 
+     * @method.hint the request method (GET|POST|PUT|DELETE)
      **/
     private HttpRequest function newRequest(
         required string method
