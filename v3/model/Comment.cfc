@@ -7,6 +7,11 @@ component displayname="Comment" output="false" accessors="true" extends="Base" {
     property name="athlete" type="struct" required="true";
     property name="created_at" type="string" required="true";
 
+    /**
+    * returns an Athlete instance
+    * 
+    * @propertyName.hint the property name
+    **/
     public Athlete function getAthlete() {
     	return new Athlete(argumentCollection=variables.athlete);
     }

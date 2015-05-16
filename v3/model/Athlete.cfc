@@ -26,8 +26,9 @@ component displayname="Athlete" output="false" accessors="true" extends="Base" {
     property name="bikes" type="array";
     property name="shoes" type="array";
 
-    // public
-
+    /**
+    * returns an array of Gear instances 
+    **/
     public array function getBikes() {
         local.bikes = [];
         if (!propertyExists('bikes')) {
@@ -38,7 +39,10 @@ component displayname="Athlete" output="false" accessors="true" extends="Base" {
         }
         return local.bikes;
     }
-
+    
+    /**
+    * returns an array of Club instances 
+    **/
     public array function getClubs() {
         local.clubs = [];
         if (!propertyExists('clubs')) {
@@ -50,6 +54,9 @@ component displayname="Athlete" output="false" accessors="true" extends="Base" {
         return local.clubs;
     }
 
+    /**
+    * returns an array of Gear instances 
+    **/
     public array function getShoes() {
         local.shoes = [];
         if (!propertyExists('shoes')) {
@@ -61,16 +68,23 @@ component displayname="Athlete" output="false" accessors="true" extends="Base" {
         return local.shoes;
     }
 
+    /**
+    * returns athlete's sex as a full word
+    **/
     public string function getSex() {
         return ( variables.sex is 'M' ? 'Male' : 'Female' );
     }
 
-    // private
-
+    /**
+    * returns a Gear instance
+    **/
     private Gear function newGear() {
         return new Gear(argumentCollection=arguments);
     }
 
+    /**
+    * returns a Club instance 
+    **/
     private Club function newClub() {
         return new Club(argumentCollection=arguments);
     }

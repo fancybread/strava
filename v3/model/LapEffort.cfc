@@ -7,7 +7,7 @@ component displayname="LapEffort" output="false" accessors="true" extends="Base"
     property name="athlete" type="struct" required="true";
     property name="elapsed_time" type="numeric" required="true";
     property name="moving_time" type="numeric" required="true";
-    property name="start_date" type="string" required="true"
+    property name="start_date" type="string" required="true";
     property name="start_date_local" type="string" required="true";
     property name="distance" type="numeric" required="true";
     property name="start_index" type="numeric" required="false";

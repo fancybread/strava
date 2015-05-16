@@ -36,27 +36,28 @@ component displayname="StravaService" accessors="true" output="false" {
     public any function athleteActivities(
         required string token,
         required date startDate,
-        array activities
+        array activities=[]
     ) {
-        var local.activities = (structKeyExists(arguments,'activities') ? arguments.activities : []);
+        var epoch = getUnixEpoch(arguments.startDate);
         var req = newRequest(method='GET');
         req.addHeader('Authorization','Bearer ' & arguments.token);
         req.addQueryParam('athlete','');
         req.addQueryParam('activities','');
-        req.setQueryString('after=' & getUnixEpoch(arguments.startDate));
+        req.setQueryString('after=' & epoch);
         var response = req.execute();
         var payload = DeserializeJson(response.fileContent);
         if (response.status_code == '200') {
         	for (var activity in payload) {
-                ArrayAppend(local.activities, new Activity(argumentCollection=activity));
+        	   ArrayAppend(arguments.activities, new Activity(argumentCollection=activity));
             }
             // make a recursive call if we get a return of the maximum 30 activities
 	        if (ArrayLen(payload) eq 30) {
-	            var nextStart = DateAdd('s',1,activities[ArrayLen(activities)].getStartDate());
-	            local.activities = athleteActivities(token=arguments.token,startDate=nextStart,activities=local.activities);
+	            var lastActivity = arguments.activities.last();
+	            var nextStart = DateAdd('s',lastActivity.getElapsedTime(),lastActivity.getStartDate());
+	            local.activities = athleteActivities(token=arguments.token,startDate=nextStart,activities=arguments.activities);
 	        }
         }
-        return local.activities;
+        return arguments.activities;
     }
 
     /**

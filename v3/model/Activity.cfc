@@ -44,6 +44,9 @@ component displayname="Activity" output="false" accessors="true" extends="Base" 
     property name="splits_standard" type="array" required="false";
     property name="best_efforts" type="array" required="false";
 
+    /**
+    * constructor
+    **/
     public Activity function init() {
     	for (var k in arguments) {
             variables[k] = arguments[k];
@@ -51,19 +54,24 @@ component displayname="Activity" output="false" accessors="true" extends="Base" 
         return this;
     }
 
+    /**
+    * returns moving time
+    **/
     public numeric function getMovingTime() {
         return variables.moving_time;
     }
 
     /**
-    * @hint returns average speed in meters per second
+    * returns average speed in meters per second
     **/
     public numeric function getAverageSpeed() {
         return getDistance()/getMovingTime();
     }
 
     /**
-    * @hint returns seconds to travel given distance
+    * returns seconds to travel given distance
+    * 
+    * @distance.hint the distance in meters
     **/
     public numeric function getTimeOverDistance(
         required numeric distance
