@@ -4,6 +4,9 @@ component displayname="OauthService" accessors="true" output="false" {
     property name="clientId" type="string";
     property name="clientSecret" type="string";
 
+    /**
+     * returns an instance of StravaService
+     **/
     public OauthService function init(
         required string clientId,
         required string clientSecret
@@ -13,6 +16,11 @@ component displayname="OauthService" accessors="true" output="false" {
         return this;
     }
 
+    /**
+     * returns the result of a token exchange request to strava OAuth
+     * 
+     * @code.hint the code returned from an authorization request
+     **/
     public any function exchangeToken(
         required string code
     ) {
@@ -25,6 +33,11 @@ component displayname="OauthService" accessors="true" output="false" {
         return response.fileContent;
     }
 
+    /**
+     * returns the result of a deauthorize request to strava OAuth
+     * 
+     * @token.hint the auth token
+     **/
     public any function deauthorize(
         required string token
     ) {
@@ -35,6 +48,12 @@ component displayname="OauthService" accessors="true" output="false" {
         return response.fileContent;
     }
 
+    /**
+     * returns an instance of HttpRequest
+     * 
+     * @requestUrl.hint the base request endpoint
+     * @method.hint the request method (GET|POST|PUT|DELETE)
+     **/
     private HttpRequest function newRequest(
         required string requestUrl,
         required string method
