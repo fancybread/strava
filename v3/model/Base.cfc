@@ -1,5 +1,9 @@
 component displayname="Base" output="false" {
 
+    /**
+    * implicit handler to provide syntactic sugar by translating camel-cased method
+    * calls to the property name based accessors (i.e. getStartDate() invokes getstart_date()).
+    **/
     public any function onMissingMethod(
         required string MissingMethodName,
         required struct MissingMethodArguments
@@ -10,11 +14,11 @@ component displayname="Base" output="false" {
                 propertyName = replace(rereplace(propertyName,"([A-Z])","_\1","all"),"_","","one");
                 if ((left(arguments.MissingMethodName,3) == 'set') && (structCount(arguments.MissingMethodArguments) == 1)) {
                     invoke(this,'set'&propertyName,arguments.MissingMethodArguments);
-                } else if ( left(arguments.MissingMethodName,3) == 'get' ) {
+                } else if ( (left(arguments.MissingMethodName,3) == 'get') && (propertyExists(propertyName)) ) {
                 	return invoke(this,'get'&propertyName);
                 }
             } catch (any e) {
-                throw(Message=e.Message);
+                throw(Message='property: ' & propertyName & ' not found in ' & getMetadata(this).name);
             }
         }
     }
@@ -40,6 +44,6 @@ component displayname="Base" output="false" {
     private boolean function propertyExists(
         required string propertyName
     ) {
-        return structKeyExists(variables,arguments.propertyName)
+        return structKeyExists(variables,arguments.propertyName);
     }
 }
