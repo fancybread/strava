@@ -48,13 +48,14 @@ component displayname="StravaService" accessors="true" output="false" {
         var payload = DeserializeJson(response.fileContent);
         if (response.status_code == '200') {
         	for (var activity in payload) {
-        	   ArrayAppend(arguments.activities, new Activity(argumentCollection=activity));
+        	   var newActivity = new Activity(argumentCollection=activity);
+        	   if (!ArrayContains(arguments.activities,newActivity)) {
+        	       ArrayAppend(arguments.activities, newActivity);
+        	   }
             }
             // make a recursive call if we get a return of the maximum 30 activities
-	        if (ArrayLen(payload) eq 30) {
-	            var lastActivity = arguments.activities.last();
-	            var nextStart = DateAdd('s',lastActivity.getElapsedTime(),lastActivity.getStartDate());
-	            local.activities = athleteActivities(token=arguments.token,startDate=nextStart,activities=arguments.activities);
+	        if (ArrayLen(payload) == 30) {
+	            arguments.activities = athleteActivities(token=arguments.token,startDate=arguments.activities.last().getStartDate(),activities=arguments.activities);
 	        }
         }
         return arguments.activities;
